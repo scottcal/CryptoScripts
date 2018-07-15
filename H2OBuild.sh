@@ -1,10 +1,16 @@
 #!/bin/bash
 
-OUTDIR=~/binaries
-NIXSRCDIR=~/linux-h2o
-OSXSRCDIR=~/mac-h2o
-WINSRCDIR=~/win-h2o
-DEPS=~/depends/depends
+OUTDIR=$HOME/binaries
+NIXSRCDIR=$HOME/linux-h2o
+OSXSRCDIR=$HOME/mac-h2o
+WINSRCDIR=$HOME/win-h2o
+
+#if [ "$2" == "alt" ]; then
+#	DEPS=~/h2o/depends
+#else
+DEPS=$HOME/h2o/depends
+#fi
+
 
 #build depends stuff first
 
@@ -18,8 +24,8 @@ DEPS=~/depends/depends
 #make -j4
 
 # OS X
-# mkdir SDKs && cd SDKs && wget https://github.com/phracker/MacOSX-SDKs/releases/download/10.13/MacOSX10.11.sdk.tar.xz && tar xf MacOSX10.11.sdk.tar.xz && rm MacOSX10.11.sdk.tar.xz
-# make HOST=x86_64-apple-darwin11 DARWIN_SDK_PATH=$PWD/SDKs/MacOSX10.11.sdk -j4
+#mkdir SDKs && cd SDKs && wget https://github.com/phracker/MacOSX-SDKs/releases/download/10.13/MacOSX10.9.sdk.tar.xz && tar xf MacOSX10.9.sdk.tar.xz && rm MacOSX10.9.sdk.tar.xz
+# make HOST=x86_64-apple-darwin11 DARWIN_SDK_PATH=$PWD/SDKs/MacOSX10.9.sdk -j4
 
 #32 bit windows
 #make HOST=i686-w64-mingw32 -j4
@@ -38,42 +44,51 @@ getversion()
 
 buildlinux()
 {
+
+chmod 775 -R $NIXSRCDIR
 cd $NIXSRCDIR
-#make clean
+make clean
 git pull
 getversion
 
 #sh autogen.sh
 
 # linux GUI 64bit
+export CXXFLAGS=-std=c++11
+export CXX=clang++
 CONFIG_SITE=$DEPS/x86_64-pc-linux-gnu/share/config.site ./configure --prefix=/ --with-gui=qt5 --disable-tests
 #make clean
 make -j4 V=1 && strip src/qt/h2o-qt && cp src/qt/h2o-qt . && tar czf $OUTDIR/h2o-gui-linux-$VER.tgz h2o-qt && rm h2o-qt
-strip src/h2od src/h2o-cli src/h2o-tx && mv src/h2od src/h2o-cli src/h2o-tx . 
+strip src/h2od src/h2o-cli src/h2o-tx && mv src/h2od src/h2o-cli src/h2o-tx .
 tar czf $OUTDIR/h2o-linux-cli-$VER.tgz h2od h2o-cli h2o-tx && rm h2od h2o-cli h2o-tx
 }
 
 buildmac()
 {
-cd $OSXSRCDIR
+cd $NIXSRCDIR
+echo "cd $OSXSRCDIR"
 #make clean
-git pull
+echo "git pull"
 getversion
 
+export CXXFLAGS=-std=c++11
+export CXX=clang++
+cd $OSXSRCDIR
+#./autogen.sh
 CONFIG_SITE=$DEPS/x86_64-apple-darwin11/share/config.site ./configure --prefix=/ --with-gui=qt5 --disable-tests
-#make clean
+make clean
 make -j4
-depends/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-strip src/h2od src/h2o-cli src/h2o-tx src/qt/h2o-qt
+$DEPS/x86_64-apple-darwin11/native/bin/x86_64-apple-darwin11-strip src/h2od src/h2o-cli src/h2o-tx src/qt/h2o-qt
 make deploy
 zip $OUTDIR/h2o-Core.dmg-$VER.zip h2o-Core.dmg
 mv src/h2od src/h2o-cli src/h2o-tx .
-tar czf $OUTDIR/h2o-cli-osx-$VER.tgz h2od xuez-cli h2o-tx && rm h2od h2o-cli h2o-tx
+tar czf $OUTDIR/h2o-cli-osx-$VER.tgz h2od h2o-cli h2o-tx && rm h2od h2o-cli h2o-tx
 }
 
 buildwin32()
 {
 cd $WINSRCDIR
-#make clean
+make clean
 git pull
 getversion
 
