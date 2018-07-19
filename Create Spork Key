@@ -1,0 +1,8 @@
+# Create params and EC private key:
+openssl ecparam -genkey -name secp256k1 -out ~/spork.pem
+
+# Derive the private key for wallet broadcast, etc:
+openssl ec -in ~/spork.pem -outform DER | tail -c +8 | head -c 32 | xxd -p -c 32
+
+# Derive the public key for chainparams.cpp:
+openssl ec -in ~/spork.pem -pubout -outform DER | tail -c 65 | xxd -p -c 65
