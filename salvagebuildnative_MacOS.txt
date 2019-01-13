@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#Must use boost 1.57
+#brew install boost@1.57
+#brew unlink boost
+#brew link boost@1.57 --force 
+
+
+
+#build salvage for mac on mac OS
+sh autogen.sh
+ ./configure --with-gui=qt5 LDFLAGS='-L/usr/local/opt/openssl/lib' CPPFLAGS='-I/usr/local/opt/openssl/include' PKG_CONFIG_PATH='/usr/local/opt/openssl/lib/pkgconfig'
+make -j12
+make deploy
+
+
